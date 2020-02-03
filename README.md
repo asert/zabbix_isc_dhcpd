@@ -1,5 +1,7 @@
-Based on: https://github.com/jpmenil/zabbix-templates/isc-dhcp
+Based on: https://github.com/jpmenil/zabbix-templates/isc-dhcp and https://github.com/garbled1/zabbix_isc_dhcpd
 
+
+## Installation
 # on dhcp server
 * install dependencies:
     * pip install pypureomapi
@@ -9,17 +11,10 @@ Based on: https://github.com/jpmenil/zabbix-templates/isc-dhcp
 * Add lines like #= NAME =# to the end of all range statements, if you want.
 * edit check_dhcp_leases.py to fix your omapi key and key name, also, probably the location of your dhcpd.conf file.
 
-# import templates in zabbix
-* add graphs
+# on zabbix server
+* import templates in zabbix
 
-As far as i know, there is no native way implemented by ISC dhcp to request free lease.
-
-Two choices, parse the dhcpd.leases file, or do it via omapi.
-
-The script is using omapi and is far from perfect.
-
-# Hacks by myself from original
-* Deal with missing names of range statements
-* Change template/code to pull all the values so you can make a stacked graph
-* slightly hack up the template
-* Zabbix 4.0
+# Fix at original version
+* Fix graphs name - I changed it to ip rate. It's more useful for me and protect from duplicate.
+* Add support config dir conf.d
+* Zabbix 4.x.x - tested from Zabbix 4.0.0 to Zabbix 4.4.5
