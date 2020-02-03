@@ -1,4 +1,4 @@
-#!/usr/pkg/bin/python2.7
+#!/usr/bin/env python2.7
 
 from netaddr import iter_iprange
 import itertools
@@ -8,19 +8,19 @@ import pypureomapi
 import re
 import sys
 
-KEYNAME = 'omapi_key'
-BASE64_ENCODED_KEY = 'g8pw3Kc7NfbXMEaMg=='
+KEYNAME = 'defomapi'
+BASE64_ENCODED_KEY = 't6VuA3SIHcKaZWRuWkSOlw=='
 dhcp_server_ip = '127.0.0.1'
 port = 7911 # Port of the omapi service
 OMAPI_OP_UPDATE = 3
-DHCP_CONF = '/usr/pkg/etc/dhcp/dhcpd.conf' if os.path.isfile('/usr/pkg/etc/dhcp/dhcpd.conf') else '/etc/dhcp/dhcpd.conf'
+DHCP_DIR = '/usr/pkg/etc/dhcp/' if os.path.isdir('/usr/pkg/etc/dhcp/') else '/etc/dhcp/'
 
-def discoverRange():
+def discoverRange(configFile):
 
     reg_range = re.compile('range\s(.*?);')
     reg_name = re.compile('#= (.*?) =#')
     ranges = []
-    with open(DHCP_CONF, 'r') as f:
+    with open(configFile, 'r') as f:
         for key, group in itertools.groupby(f, lambda line: line.startswith('\n')):
             if not key:
                 subnet_info = list(group)
@@ -35,10 +35,7 @@ def discoverRange():
                         if num < len(name):
                             myname = name[num]
                         ranges.append({'{#NAME}': myname, '{#RANGE}': '{0}-{1}'.format(ip_start, ip_end), '{#TOTAL}': len(ips)})
-
-    ranges_dict = {}
-    ranges_dict['data'] = ranges
-    return json.dumps(ranges_dict)
+    return ranges
 
 def checkRange(ipsList, ip_type):
 
@@ -89,6 +86,17 @@ def checkRange(ipsList, ip_type):
 if __name__ == "__main__":
 
     if len(sys.argv) < 2:
-        sys.exit(discoverRange()) 
+        if os.path.isdir(DHCP_DIR + 'conf.d/'):
+            configIncludeFiles = filter(lambda x: x.endswith('.conf'), os.listdir(DHCP_DIR + 'conf.d/'))
+            for item in enumerate(configIncludeFiles):
+                configIncludeFiles[item[0]]=DHCP_DIR + 'conf.d/' + item[1]
+        configIncludeFiles.append(DHCP_DIR + 'dhcpd.conf')
+
+        ranges_dict = {}
+        i=[]
+        for configFile in configIncludeFiles:
+            i = i + discoverRange(configFile)
+        ranges_dict['data'] = i
+        sys.exit(json.dumps(ranges_dict))
     else:
         sys.exit(checkRange(sys.argv[1], sys.argv[2]))
